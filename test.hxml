@@ -1,0 +1,12 @@
+-cp src
+-cp test
+-main Test 
+-neko bin\Test.n
+-resource test.xml@umltest
+
+--next
+-cp src
+-cp test
+-main Test 
+-js bin\Test.js
+-resource test.xml@umltest
