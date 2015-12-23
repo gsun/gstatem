@@ -32,14 +32,14 @@ class SMBuilder {
         return cl;
     }
     
-    macro public static function buildSM(resourceName:String, State:String, Event:String) :Expr  {
+    macro public static function buildSM(resourceName:String, state:String, event:String) :Expr  {
        var code : String = '';
        var expr : Expr = null;
        var umlParser = UmlParser.findUmlParser(resourceName);
        
        //init the state machine and verteics
-       code += '\nvar vertics = new Map<' + State + ', sm.SM.SmVertex<' + State +', ' + Event + '>>();';
-       code += '\nvar stm = new sm.SM<' + State + ',' + Event +'> ("' + resourceName + '" ,vertics);';
+       code += '\nvar vertics = new Map<$state, sm.SM.SmVertex<$state, $event>>();';
+       code += '\nvar stm = new sm.SM<$state, $event> ("$resourceName",vertics);';
        
        for (stateId in umlParser.vertics.keys()) {
            var stateDetail = umlParser.stateDetails.get(stateId);
@@ -48,9 +48,9 @@ class SMBuilder {
            code += '\n{';
            
            //init the vertix and transition array.
-           code += '\nvar transitions = new Array<sm.SM.SmTransition<' + State + ',' + Event + '>>();';
-           code += '\nvar vertix = new sm.SM.SmVertex<' + State + ',' + Event + '>(' + stateDetail.name + ',transitions,' + stateDetail.pseudo + ',' + stateDetail.final + ');';
-           code += '\nvertics.set(' + stateDetail.name + ',vertix);';
+           code += '\nvar transitions = new Array<sm.SM.SmTransition<$state, $event>>();';
+           code += '\nvar vertix = new sm.SM.SmVertex<$state, $event>(${stateDetail.name}, transitions, ${stateDetail.pseudo}, ${stateDetail.final});';
+           code += '\nvertics.set(${stateDetail.name}, vertix);';
            
            for (priorityItem in priorityItems) {
                var transition = umlParser.flattenedTransDetails.get(priorityItem.transId);
@@ -58,20 +58,20 @@ class SMBuilder {
                code += '\n{';
                
                //init the behavior array.
-               code += '\nvar behaviors = new Array<sm.SM.TransitionBehavior<' + State +',' + Event + '>>();';
+               code += '\nvar behaviors = new Array<sm.SM.TransitionBehavior<$state, $event>>();';
                code += '\nvar behavior = null;';
                
                for (behavior in transition.behaviors) {            
                    //init the behavior entrie and add it into the array
-                   var transit = behavior.transit!=null?('"'+behavior.transit+'"'):null;
-                   var entryExit = behavior.entryExit!=null?('"'+behavior.entryExit+'"'):null;
-                   code += '\nbehavior = new sm.SM.TransitionBehavior<' + State + ',' + Event + '>("' + behavior.description + '",' + transit + ',' + entryExit + ',' + behavior.nextState + ');';                                   
+                   var transit = behavior.transit!=null?('"${behavior.transit}"'):null;
+                   var entryExit = behavior.entryExit!=null?('"${behavior.entryExit}"'):null;
+                   code += '\nbehavior = new sm.SM.TransitionBehavior<$state, $event>("${behavior.description}", $transit, $entryExit, ${behavior.nextState});';                                   
                    code += '\nbehaviors.push(behavior);';
                }
               
                //init the transition and add it into the v
                var guard = transition.guard!=null?('"'+transition.guard+'"'):null;
-               code += '\nvar transition = new sm.SM.SmTransition<' + State + ',' + Event + '>("' + transition.description + '",' +  transition.source + ',' + transition.event + ',behaviors,' + transition.target + ',' + guard + ');';         
+               code += '\nvar transition = new sm.SM.SmTransition<$state, $event>("${transition.description}", ${transition.source}, ${transition.event},behaviors,${transition.target},$guard);';         
 
                code += '\ntransitions.push(transition);';
                code += '\n}';
@@ -80,10 +80,10 @@ class SMBuilder {
           code += '\n}';
        }
        
-       code += '\nsm.SM.setSM("' + resourceName +'",' + 'stm);';
+       code += '\nsm.SM.setSM("$resourceName", stm);';
        code += '\nreturn stm;';
               
-       code = '(function() :sm.SM<' + State + ',' + Event +'> {' + code + '})()';
+       code = '(function() :sm.SM<$state ,$event> {$code})()';
        expr = Context.parseInlineString(code, Context.makePosition({ min:0, max:0, file:resourceName}));
        
        #if debug
