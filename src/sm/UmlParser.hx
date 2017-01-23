@@ -203,7 +203,7 @@ class UmlParser {
         for (ii in e.elements()) {
         
              switch (ii.nodeName) {
-                 case "UML:SimpleState", "UML:FinalState", "UML:CompositeState", "UML:FinalState":
+                 case "UML:SimpleState", "UML:FinalState", "UML:CompositeState":
                      logState(ii);                   
                  case "UML:Transition":
                      logTransition(ii);
